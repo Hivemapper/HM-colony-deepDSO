@@ -24,8 +24,8 @@
 
 
 #include "util/settings.h"
-#include <boost/bind.hpp>
-
+// #include <boost/bind.hpp>
+#define BOOST_BIND_GLOBAL_PLACEHOLDERS
 
 namespace dso
 {

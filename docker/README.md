@@ -9,9 +9,15 @@
 
 `docker --version`
 
+If not, then install. For Centos 7/8 this means:
+    `yum install -y docker`
+    `sudo systemctl start docker`
+
 2. Check that you have an NVIDIA driver installed on your host machine:
 
 `nvidia-smi`
+
+If not, then read [these instructions](https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/install-nvidia-driver.html#preinstalled-nvidia-driver) for a G3 machine.
 
 3. Setup the nvidia-toolkit on your host machine<sup>[3](#f3)</sup>:
 

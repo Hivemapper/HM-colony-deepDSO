@@ -20,23 +20,8 @@ RUN cd opencv && \
     make -j8 && \
     make install
 
-# # Install mbedtls-devel
-# RUN wget https://download-ib01.fedoraproject.org/pub/epel/8/Everything/x86_64/Packages/e/epel-release-8-10.el8.noarch.rpm
-# RUN rpm -Uvh epel-release*rpm
-# RUN dnf install -y mbedtls-devel
-
-# # Install LIBZIP
+# Install LIBZIP
 RUN dnf install -y libzip libzip-devel
-# RUN yum install -y nettle-devel gnutls-devel openssl-devel bzip2-devel mbedtls-devel
-# RUN wget https://libzip.org/download/libzip-1.7.3.tar.gz
-# RUN tar -xzvf libzip-1.7.3.tar.gz
-# RUN cd libzip-1.7.3 && \
-#     mkdir build && \
-#     cd build && \
-#     cmake3 ../ && \
-#     make && \
-#     make test && \
-#     make install 
 
 # Install GLEW
 RUN dnf --enablerepo=powertools install -y glew-devel
@@ -56,30 +41,23 @@ RUN wget https://download.pytorch.org/libtorch/cu101/libtorch-cxx11-abi-shared-w
 RUN unzip libtorch-cxx11-abi-shared-with-deps-1.7.1+cu101.zip
 ENV PATH="/libtorch:$PATH"
 
-# Install boost
-RUN yum install -y boost-devel
-# Install suitesparse
-RUN dnf --enablerepo=powertools install -y suitesparse-devel
-
-# # Install Protobuf
-# RUN git clone https://github.com/protocolbuffers/protobuf.git
-# RUN cd protobuf && \
-#     git submodule update --init --recursive && \
-#     ./autogen.sh && \
-#     ./configure && \
-#     make -j16 && \
-#     make check && \
-#     sudo make install && \
-#     sudo ldconfig # refresh shared library cache.
-
 # Install dependencies
-RUN dnf --enablerepo=powertools install -y eigen3-devel zlib-devel
+RUN yum install -y boost-devel
+RUN dnf --enablerepo=powertools install -y suitesparse-devel eigen3-devel zlib-devel openssl-devel
 
-# # Build and install deepDSO
-# RUN git clone https://github.com/Hivemapper/deepDSO.git && \
-#     cd deepDSO && \
-#     git checkout dev && \
-#     mkdir build && \
-#     cd build && \
-#     cmake3 ../ && \
-#     make -j4
+# Install cmake 3.19.3
+RUN wget https://github.com/Kitware/CMake/releases/download/v3.19.3/cmake-3.19.3.tar.gz
+RUN tar -xzvf cmake-3.19.3.tar.gz
+RUN cd cmake-3.19.3 && \
+    ./bootstrap && \
+    make -j16 && \
+    make install
+
+# Build and install deepDSO
+RUN git clone https://github.com/Hivemapper/deepDSO.git && \
+    cd deepDSO && \
+    git checkout dev && \
+    mkdir build && \
+    cd build && \
+    cmake3 ../ && \
+    make -j16

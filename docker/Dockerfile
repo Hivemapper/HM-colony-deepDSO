@@ -1,4 +1,4 @@
-FROM nvidia/cuda:10.2-cudnn8-devel-centos8
+FROM nvidia/cuda:10.1-cudnn8-devel-centos8
 
 # Install dependencies
 RUN yum install -y \
@@ -11,7 +11,7 @@ RUN yum install -y \
     boost-devel \
     mesa-libGL-devel
 RUN dnf install -y libzip-devel && \
-    dnf --enablerepo=powertools install -y suitesparse-devel \
+    dnf --enablerepo=PowerTools install -y suitesparse-devel \
     eigen3-devel \
     zlib-devel \
     openssl-devel \
@@ -37,7 +37,7 @@ RUN git clone https://github.com/opencv/opencv.git && \
     mkdir build && \
     cd build && \
     cmake3 ../ && \
-    make -j8 && \
+    make && \
     make install
 
 # Install Pangolin

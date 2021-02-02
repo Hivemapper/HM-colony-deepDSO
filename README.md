@@ -23,25 +23,17 @@ In this project, we extend direct sparse odometry(DSO) with a self-supervised de
 |D3VO[5] | mono|0.099 | 0.763 | 4.485 |0.185  | 0.885 | 0.958 |0.979 |
 # Installation
 ## Dependencies
-### required
+### Required
 - [libtorch](https://pytorch.org/get-started/locally/)(`c++11`)
 - OpenCV3+
 - CUDA(10.1)
 - [Protobuf >= 3.8.x](https://github.com/google/protobuf/releases)
-### optional
+### Optional
 TensorRT is one the applicable inference framework which reduces the consumed inference time and computation overhead greatly. Although converting model into torchscript is also a good choice to save time, the builtin optimization principles of tensorrt are still much effcient than torchscript. I also trying to optimize this depth estimaition module with TensorRT.
 - ONNX(1.6.0)
 - [TensorRT 7.0 open source libaries (master branch)](https://github.com/NVIDIA/TensorRT/)
 
 ## Building
-- prepare all required libs mentioned before, and download this projet.
+- See `./docker/` for instructions on how to either build your own docker image from scratch, or use an existing docker image from DockerHub. The `./docker/Dockerfile` is also useful starting point for creating a build on a Debian system.
 
-             git clone https://github.com/TengFeiHan0/deepDSO.git 
-- go to [monodepth2.cpp](https://github.com/TengFeiHan0/monodepth2.cpp) and download the required torchscript model(`packnet.pt`) and another required lib (`libtorch`) from its offical [website](https://pytorch.org/get-started/locally/)
-- Build
-
-		cd deepDSO
-		mkdir build
-		cd build
-		cmake ..
-		make -j4
+- Go to [monodepth2.cpp](https://github.com/TengFeiHan0/monodepth2.cpp) and download the required torchscript model(`packnet.pt`). This is needed at runtime to test the example trained network.

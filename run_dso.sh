@@ -1,9 +1,9 @@
   #!/usr/bin/env bash  
  
  ./build/bin/dso_dataset \
-		files=../dataset_gray/sequences/00/image_0 \
+		files=../dataset_gray/sequences/00/test \
 		calib=./camera.txt \
 		cnn=../PackNet01_HR_velsup_CStoK_jit.pt \
 		preset=0 \
 		mode=1 \
-		nogui=0
+		nogui=1

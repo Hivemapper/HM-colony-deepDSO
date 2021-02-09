@@ -50,6 +50,7 @@
 #include "OptimizationBackend/EnergyFunctional.h"
 #include "OptimizationBackend/EnergyFunctionalStructs.h"
 
+#include "IOWrapper/OpenCV/BinaryCvMat.h"
 #include "IOWrapper/Output3DWrapper.h"
 
 #include "util/ImageAndExposure.h"
@@ -1433,6 +1434,7 @@ void FullSystem::initializeFromInitializerCNN(FrameHessian* newFrame)
 	newFrame->pointHessiansOut.reserve(numPointsTotal*1.2f);
 
 	cv::Mat depth = getDepthMap(newFrame);
+	SaveMatBinary("depth_image.png",depth);
 
     for (IOWrap::Output3DWrapper *ow : outputWrapper){
 

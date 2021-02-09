@@ -103,7 +103,8 @@ if (OpenCV_FOUND)
 	include_directories( ${OpenCV_INCLUDE_DIRS} )
 	set(dso_opencv_SOURCE_FILES 
 	  ${PROJECT_SOURCE_DIR}/src/IOWrapper/OpenCV/ImageDisplay_OpenCV.cpp
-	  ${PROJECT_SOURCE_DIR}/src/IOWrapper/OpenCV/ImageRW_OpenCV.cpp)
+	  ${PROJECT_SOURCE_DIR}/src/IOWrapper/OpenCV/ImageRW_OpenCV.cpp
+    ${PROJECT_SOURCE_DIR}/src/IOWrapper/OpenCV/BinaryCvMat.cpp)
 	set(HAS_OPENCV 1)
 else ()
 	message("--- could not find OpenCV, not compiling dso_opencv library.")

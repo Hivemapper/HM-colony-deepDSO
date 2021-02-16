@@ -1434,7 +1434,8 @@ void FullSystem::initializeFromInitializerCNN(FrameHessian* newFrame)
 	newFrame->pointHessiansOut.reserve(numPointsTotal*1.2f);
 
 	cv::Mat depth = getDepthMap(newFrame);
-	SaveMatBinary("depth_image.png",depth);
+std::string depthfile = "./depth_maps/depth_image" + std::to_string(newFrame->shell->incoming_id) + ".bin";
+SaveMatBinary(depthfile,depth);
 
     for (IOWrap::Output3DWrapper *ow : outputWrapper){
 

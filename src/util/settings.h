@@ -127,7 +127,7 @@ extern bool setting_forceAceptStep;
 
 extern float setting_huberTH;
 
-
+extern std::string outputs_folder;
 extern bool setting_logStuff;
 extern float benchmarkSetting_fxfyfac;
 extern int benchmarkSetting_width;

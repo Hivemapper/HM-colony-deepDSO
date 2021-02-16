@@ -71,7 +71,11 @@ int CalibHessian::instanceCounter=0;
 FullSystem::FullSystem(const std::string &path_cnn) {
 
     int retstat = 0;
-    auto junk = system("mkdir -p ./depth_maps"); // Make an output folder
+
+    // Make an output folder
+    std::string cmd = ("mkdir -p " + outputs_folder);
+    auto junk = system(cmd.c_str());
+
     if (setting_logStuff) {
 
         retstat += system("rm -rf logs");
@@ -1435,8 +1439,8 @@ void FullSystem::initializeFromInitializerCNN(FrameHessian* newFrame)
 	newFrame->pointHessiansOut.reserve(numPointsTotal*1.2f);
 
 	cv::Mat depth = getDepthMap(newFrame);
-std::string depthfile = "./depth_maps/depth_image" + std::to_string(newFrame->shell->incoming_id) + ".bin";
-SaveMatBinary(depthfile,depth);
+	std::string depthfile = outputs_folder + "/depth_image" + std::to_string(newFrame->shell->incoming_id) + ".bin";
+	SaveMatBinary(depthfile,depth);
 
     for (IOWrap::Output3DWrapper *ow : outputWrapper){
 

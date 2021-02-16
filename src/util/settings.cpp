@@ -191,6 +191,7 @@ bool multiThreading = true;
 bool disableAllDisplay = false;
 bool setting_onlyLogKFPoses = true;
 bool setting_logStuff = true;
+std::string outputs_folder = "./deepDSO_outputs";
 
 
 bool goStepByStep = false;

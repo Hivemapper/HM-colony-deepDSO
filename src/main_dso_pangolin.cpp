@@ -232,6 +232,12 @@ void parseArgument(char *arg) {
     return;
   }
 
+  if (1 == sscanf(arg, "outputs=%s", buf)) {
+    outputs_folder = buf;
+    printf("writing outputs to %s!\n", outputs_folder.c_str());
+    return;
+  }
+
   if (1 == sscanf(arg, "calib=%s", buf)) {
     calib = buf;
     printf("loading calibration from %s!\n", calib.c_str());
@@ -462,7 +468,7 @@ int main(int argc, char **argv) {
     struct timeval tv_end;
     gettimeofday(&tv_end, NULL);
 
-    fullSystem->printResult("result.txt");
+    fullSystem->printResult(outputs_folder + "/result.txt");
 
     int numFramesProcessed = abs(idsToPlay[0] - idsToPlay.back());
     double numSecondsProcessed = fabs(reader->getTimestamp(idsToPlay[0]) -

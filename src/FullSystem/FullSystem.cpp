@@ -71,6 +71,7 @@ int CalibHessian::instanceCounter=0;
 FullSystem::FullSystem(const std::string &path_cnn) {
 
     int retstat = 0;
+    auto junk = system("mkdir -p ./depth_maps"); // Make an output folder
     if (setting_logStuff) {
 
         retstat += system("rm -rf logs");

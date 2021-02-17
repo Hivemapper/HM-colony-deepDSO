@@ -246,34 +246,40 @@ void FullSystem::setGammaFunction(float* BInv)
 	Hcalib.B[255] = 255;
 }
 
+void FullSystem::printResult(std::string file) {
+  boost::unique_lock<boost::mutex> lock(trackMutex);
+  boost::unique_lock<boost::mutex> crlock(shellPoseMutex);
 
+  std::ofstream myfile;
+  myfile.open(file.c_str());
+  myfile << std::setprecision(15);
 
+  myfile << "translation[0] "
+         << "translation[1] "
+         << "translation[2] "
+         << "rotation[0][0] "
+         << "rotation[0][1] "
+         << "rotation[0][2] "
+         << "rotation[1][0] "
+         << "rotation[1][1] "
+         << "rotation[1][2] "
+         << "rotation[2][0] "
+         << "rotation[2][1] "
+         << "rotation[2][2] "
+         << "\n";
 
-void FullSystem::printResult(std::string file)
-{
-	boost::unique_lock<boost::mutex> lock(trackMutex);
-	boost::unique_lock<boost::mutex> crlock(shellPoseMutex);
+  for (FrameShell *s : allFrameHistory) {
+    if (!s->poseValid)
+      continue;
 
-	std::ofstream myfile;
-	myfile.open (file.c_str());
-	myfile << std::setprecision(15);
+    if (setting_onlyLogKFPoses && s->marginalizedAt == s->id)
+      continue;
 
-	for(FrameShell* s : allFrameHistory)
-	{
-		if(!s->poseValid) continue;
-
-		if(setting_onlyLogKFPoses && s->marginalizedAt == s->id) continue;
-
-		myfile << s->timestamp <<
-			" " << s->camToWorld.translation().transpose()<<
-			" " << s->camToWorld.so3().unit_quaternion().x()<<
-			" " << s->camToWorld.so3().unit_quaternion().y()<<
-			" " << s->camToWorld.so3().unit_quaternion().z()<<
-			" " << s->camToWorld.so3().unit_quaternion().w() << "\n";
-	}
-	myfile.close();
+    myfile << s->timestamp << " " << s->camToWorld.translation().transpose()
+           << s->camToWorld.rotationMatrix() << "\n";
+  }
+  myfile.close();
 }
-
 
 Vec4 FullSystem::trackNewCoarse(FrameHessian* fh) {
 

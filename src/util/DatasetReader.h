@@ -40,7 +40,7 @@
 #endif
 
 #include <boost/thread.hpp>
-
+namespace fs = std::filesystem;
 using namespace dso;
 
 
@@ -229,6 +229,11 @@ public:
 		return getImage_internal(id, 0);
 	}
 
+	std::string getImagePrefix(int id)
+	{
+		std::string prefix = fs::path(files[id]).stem();
+		return prefix;
+	}
 
 	inline float* getPhotometricGamma()
 	{

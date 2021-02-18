@@ -891,7 +891,7 @@ void FullSystem::flagPointsForRemoval()
 }
 
 
-void FullSystem::addActiveFrame( ImageAndExposure* image, int id )
+void FullSystem::addActiveFrame( ImageAndExposure* image, int id, std::string prefix )
 {
 
     if(isLost) return;
@@ -906,6 +906,7 @@ void FullSystem::addActiveFrame( ImageAndExposure* image, int id )
     shell->marginalizedAt = shell->id = allFrameHistory.size();
     shell->timestamp = image->timestamp;
     shell->incoming_id = id;
+	shell->file_prefix = prefix;
 	fh->shell = shell;
 	allFrameHistory.push_back(shell);
 
@@ -1463,8 +1464,10 @@ void FullSystem::initializeFromInitializerCNN(FrameHessian* newFrame)
 	newFrame->pointHessiansOut.reserve(numPointsTotal*1.2f);
 
 	cv::Mat depth = getDepthMap(newFrame);
-	std::string depthfile = outputs_folder + "/depthmaps/" + std::to_string(newFrame->shell->incoming_id) + ".bin";
-	SaveMatBinary(depthfile,depth);
+	std::string depthfile = outputs_folder + "/depthmaps/" + newFrame->shell->file_prefix + ".bin";
+
+	// Save depthmap to file as binary
+    SaveMatBinary(depthfile,depth);
 
     for (IOWrap::Output3DWrapper *ow : outputWrapper){
 

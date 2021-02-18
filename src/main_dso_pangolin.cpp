@@ -413,6 +413,7 @@ int main(int argc, char **argv) {
         img = preloadedImages[ii];
       else
         img = reader->getImage(i);
+        std::string file_prefix = reader->getImagePrefix(i);
 
       bool skipFrame = false;
       if (playbackSpeed != 0) {
@@ -433,7 +434,7 @@ int main(int argc, char **argv) {
       }
 
       if (!skipFrame)
-        fullSystem->addActiveFrame(img, i);
+        fullSystem->addActiveFrame(img, i, file_prefix);
 
       delete img;
 

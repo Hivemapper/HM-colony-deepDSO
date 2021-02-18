@@ -73,7 +73,7 @@ FullSystem::FullSystem(const std::string &path_cnn) {
     int retstat = 0;
 
     // Make an output folder
-    std::string cmd = ("mkdir -p " + outputs_folder);
+    std::string cmd = ("mkdir -p " + outputs_folder + "/depthmaps");
     auto junk = system(cmd.c_str());
 
     if (setting_logStuff) {
@@ -276,10 +276,28 @@ void FullSystem::printResult(std::string file) {
       continue;
 
     myfile << s->timestamp << " " << s->camToWorld.translation().transpose()
-           << s->camToWorld.rotationMatrix() << "\n";
+           << " " << s->camToWorld.rotationMatrix()(0) << " "
+           << s->camToWorld.rotationMatrix()(1) << " "
+           << s->camToWorld.rotationMatrix()(2) << " "
+           << s->camToWorld.rotationMatrix()(3) << " "
+           << s->camToWorld.rotationMatrix()(4) << " "
+           << s->camToWorld.rotationMatrix()(5) << " "
+           << s->camToWorld.rotationMatrix()(6) << " "
+           << s->camToWorld.rotationMatrix()(7) << " "
+           << s->camToWorld.rotationMatrix()(8) << "\n";
   }
   myfile.close();
 }
+
+
+        //    << s->camToWorld.rotationMatrix()[1]
+        //    << s->camToWorld.rotationMatrix()[2]
+        //    << s->camToWorld.rotationMatrix()[3]
+        //    << s->camToWorld.rotationMatrix()[4]
+        //    << s->camToWorld.rotationMatrix()[5]
+        //    << s->camToWorld.rotationMatrix()[6]
+        //    << s->camToWorld.rotationMatrix()[7]
+
 
 Vec4 FullSystem::trackNewCoarse(FrameHessian* fh) {
 
@@ -1445,7 +1463,7 @@ void FullSystem::initializeFromInitializerCNN(FrameHessian* newFrame)
 	newFrame->pointHessiansOut.reserve(numPointsTotal*1.2f);
 
 	cv::Mat depth = getDepthMap(newFrame);
-	std::string depthfile = outputs_folder + "/depth_image" + std::to_string(newFrame->shell->incoming_id) + ".bin";
+	std::string depthfile = outputs_folder + "/depthmaps/" + std::to_string(newFrame->shell->incoming_id) + ".bin";
 	SaveMatBinary(depthfile,depth);
 
     for (IOWrap::Output3DWrapper *ow : outputWrapper){

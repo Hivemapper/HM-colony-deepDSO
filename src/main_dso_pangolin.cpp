@@ -468,7 +468,7 @@ int main(int argc, char **argv) {
     struct timeval tv_end;
     gettimeofday(&tv_end, NULL);
 
-    fullSystem->printResult(outputs_folder + "/result.txt");
+    fullSystem->printResult(outputs_folder + "/camera_poses.txt");
 
     int numFramesProcessed = abs(idsToPlay[0] - idsToPlay.back());
     double numSecondsProcessed = fabs(reader->getTimestamp(idsToPlay[0]) -

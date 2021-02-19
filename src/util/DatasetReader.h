@@ -40,6 +40,7 @@
 #endif
 
 #include <boost/thread.hpp>
+#include <filesystem>
 namespace fs = std::filesystem;
 using namespace dso;
 

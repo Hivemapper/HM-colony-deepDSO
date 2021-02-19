@@ -254,7 +254,9 @@ void FullSystem::printResult(std::string file) {
   myfile.open(file.c_str());
   myfile << std::setprecision(15);
 
-  myfile << "translation[0] "
+  myfile << "timestamp "
+         << "file_prefix "
+         << "translation[0] "
          << "translation[1] "
          << "translation[2] "
          << "rotation[0][0] "
@@ -275,8 +277,9 @@ void FullSystem::printResult(std::string file) {
     if (setting_onlyLogKFPoses && s->marginalizedAt == s->id)
       continue;
 
-    myfile << s->timestamp << " " << s->camToWorld.translation().transpose()
-           << " " << s->camToWorld.rotationMatrix()(0) << " "
+    myfile << s->timestamp << " " << s->file_prefix << " "
+           << s->camToWorld.translation().transpose() << " "
+           << s->camToWorld.rotationMatrix()(0) << " "
            << s->camToWorld.rotationMatrix()(1) << " "
            << s->camToWorld.rotationMatrix()(2) << " "
            << s->camToWorld.rotationMatrix()(3) << " "

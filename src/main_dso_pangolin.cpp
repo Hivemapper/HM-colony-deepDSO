@@ -433,8 +433,11 @@ int main(int argc, char **argv) {
         }
       }
 
-      if (!skipFrame)
+      if (!skipFrame) {
         fullSystem->addActiveFrame(img, i, file_prefix);
+      } else {
+        std::cout << "skipping file_prefix = " << file_prefix << std::endl;
+      }
 
       delete img;
 

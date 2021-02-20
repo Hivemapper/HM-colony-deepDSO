@@ -271,11 +271,18 @@ void FullSystem::printResult(std::string file) {
          << "\n";
 
   for (FrameShell *s : allFrameHistory) {
-    if (!s->poseValid)
+    if (!s->poseValid) {
+      std::cout << "Frame_prefix " << s->file_prefix
+                << " has an invalid pose and won't be logged: " << std::endl;
       continue;
+    }
 
-    if (setting_onlyLogKFPoses && s->marginalizedAt == s->id)
+    if (setting_onlyLogKFPoses && s->marginalizedAt == s->id) {
+      std::cout << "Frame_prefix " << s->file_prefix
+                << " is considered MARGINALIZED and won't be logged: "
+                << std::endl;
       continue;
+    }
 
     myfile << s->timestamp << " " << s->file_prefix << " "
            << s->camToWorld.translation().transpose() << " "
@@ -1005,11 +1012,12 @@ void FullSystem::deliverTrackedFrame(FrameHessian* fh, bool needKF)
 		}
 		else handleKey( IOWrap::waitKey(1) );
 
-
-
-		if(needKF) makeKeyFrame(fh);
-		else makeNonKeyFrame(fh);
-	}
+			if (needKF) {
+				makeKeyFrame(fh);
+			} else {
+				makeNonKeyFrame(fh);
+			}
+        }
 	else
 	{
 		boost::unique_lock<boost::mutex> lock(trackMapSyncMutex);
@@ -1400,6 +1408,11 @@ void FullSystem::initializeFromInitializerCNN(FrameHessian* newFrame)
 
 	cv::Mat depth = getDepthMap(firstFrame);
    
+   	// Save depthmap to file as binary
+   	std::string depthfile = outputs_folder + "/depthmaps/" + firstFrame->shell->file_prefix + ".bin";
+	std::cout << " depthfile = " << depthfile << std::endl;
+    SaveMatBinary(depthfile,depth);
+
 	float* depthmap_ptr = (float*) depth.data;
 	for(int i=0;i<coarseInitializer->numPoints[0];i++)
 	{
@@ -1468,6 +1481,7 @@ void FullSystem::initializeFromInitializerCNN(FrameHessian* newFrame)
 
 	cv::Mat depth = getDepthMap(newFrame);
 	std::string depthfile = outputs_folder + "/depthmaps/" + newFrame->shell->file_prefix + ".bin";
+	std::cout << " depthfile = " << depthfile << std::endl;
 
 	// Save depthmap to file as binary
     SaveMatBinary(depthfile,depth);

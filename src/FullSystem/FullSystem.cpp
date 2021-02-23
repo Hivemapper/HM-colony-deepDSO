@@ -278,28 +278,49 @@ void FullSystem::printResult(std::string file) {
       continue;
     }
 
-    myfile << s->timestamp << " " << s->file_prefix << " "
-           << s->camToWorld.translation().transpose() << " "
-           << s->camToWorld.rotationMatrix()(0) << " "
-           << s->camToWorld.rotationMatrix()(1) << " "
-           << s->camToWorld.rotationMatrix()(2) << " "
+    // Since "translation" vector is really global position, we need to convert
+    // to actual T (translation of the global origin from the camera coordinate
+    // system.
+    // Pos = -R^T * T
+    // T = -R * Pos
+    std::vector<float> T;
+    float t0 =
+        (s->camToWorld.rotationMatrix()(0)) * (s->camToWorld.translation()(0)) +
+        (s->camToWorld.rotationMatrix()(3)) * (s->camToWorld.translation()(1)) +
+        (s->camToWorld.rotationMatrix()(6)) * (s->camToWorld.translation()(2));
+    T.push_back(-1.0 * t0);
+    float t1 =
+        (s->camToWorld.rotationMatrix()(1)) * (s->camToWorld.translation()(0)) +
+        (s->camToWorld.rotationMatrix()(4)) * (s->camToWorld.translation()(1)) +
+        (s->camToWorld.rotationMatrix()(7)) * (s->camToWorld.translation()(2));
+    T.push_back(-1.0 * t1);
+    float t2 =
+        (s->camToWorld.rotationMatrix()(2)) * (s->camToWorld.translation()(0)) +
+        (s->camToWorld.rotationMatrix()(5)) * (s->camToWorld.translation()(1)) +
+        (s->camToWorld.rotationMatrix()(8)) * (s->camToWorld.translation()(2));
+    T.push_back(-1.0 * t2);
+
+    // READ IN EACH COL AND PLACE AS A ROW
+    // This has been verified to correctly write out the mathematical
+    // form of R, such that R^T*[0 0 01] gives the correct viewing
+    // direction of the camera
+    // https://math.stackexchange.com/questions/82602/how-to-find-camera-position-and-rotation-from-a-4x4-matrix
+    myfile << s->timestamp << " " << s->file_prefix << " " 
+           << T[0] << " "
+           << T[1] << " " 
+           << T[2] << " " 
+           << s->camToWorld.rotationMatrix()(0) << " " 
            << s->camToWorld.rotationMatrix()(3) << " "
-           << s->camToWorld.rotationMatrix()(4) << " "
-           << s->camToWorld.rotationMatrix()(5) << " "
            << s->camToWorld.rotationMatrix()(6) << " "
+           << s->camToWorld.rotationMatrix()(1) << " "
+           << s->camToWorld.rotationMatrix()(4) << " "
            << s->camToWorld.rotationMatrix()(7) << " "
+           << s->camToWorld.rotationMatrix()(2) << " "
+           << s->camToWorld.rotationMatrix()(5) << " "
            << s->camToWorld.rotationMatrix()(8) << "\n";
   }
   myfile.close();
 }
-
-//    << s->camToWorld.rotationMatrix()[1]
-//    << s->camToWorld.rotationMatrix()[2]
-//    << s->camToWorld.rotationMatrix()[3]
-//    << s->camToWorld.rotationMatrix()[4]
-//    << s->camToWorld.rotationMatrix()[5]
-//    << s->camToWorld.rotationMatrix()[6]
-//    << s->camToWorld.rotationMatrix()[7]
 
 Vec4 FullSystem::trackNewCoarse(FrameHessian *fh) {
 
@@ -672,13 +693,13 @@ void FullSystem::traceNewCoarse(FrameHessian *fh) {
   }
   //	printf("ADD: TRACE: %'d points. %'d (%.0f%%) good. %'d (%.0f%%) skip.
   //%'d (%.0f%%) badcond. %'d (%.0f%%) oob. %'d (%.0f%%) out. %'d (%.0f%%)
-  //uninit.\n", 			trace_total, 			trace_good, 100*trace_good/(float)trace_total,
-  //			trace_skip, 100*trace_skip/(float)trace_total,
-  //			trace_badcondition,
-  //100*trace_badcondition/(float)trace_total, 			trace_oob,
-  //100*trace_oob/(float)trace_total, 			trace_out,
-  //100*trace_out/(float)trace_total, 			trace_uninitialized,
-  //100*trace_uninitialized/(float)trace_total);
+  // uninit.\n", 			trace_total, trace_good,
+  // 100*trace_good/(float)trace_total, 			trace_skip,
+  // 100*trace_skip/(float)trace_total, trace_badcondition,
+  // 100*trace_badcondition/(float)trace_total, trace_oob,
+  // 100*trace_oob/(float)trace_total, 			trace_out,
+  // 100*trace_out/(float)trace_total, 			trace_uninitialized,
+  // 100*trace_uninitialized/(float)trace_total);
 }
 
 void FullSystem::activatePointsMT_Reductor(
@@ -804,8 +825,8 @@ void FullSystem::activatePointsMT() {
   }
 
   //	printf("ACTIVATE: %d. (del %d, notReady %d, marg %d, good %d, marg-skip
-  //%d)\n", 			(int)toOptimize.size(), immature_deleted, immature_notReady,
-  //immature_needMarg, immature_want, immature_margskip);
+  //%d)\n", 			(int)toOptimize.size(), immature_deleted,
+  // immature_notReady, immature_needMarg, immature_want, immature_margskip);
 
   std::vector<PointHessian *> optimized;
   optimized.resize(toOptimize.size());

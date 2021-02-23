@@ -69,6 +69,6 @@ if __name__ == '__main__':
     TT = np.array(ply_vec, dtype=[('x', 'f4'), ('y', 'f4'),
                                   ('z', 'f4'), ('nx', 'f4'), ('ny', 'f4'), ('nz', 'f4')])
     el = PlyElement.describe(TT, 'vertex')
-    PlyData([el], text=True).write('output_file')
+    PlyData([el], text=True).write(output_file)
 
     print("DONE!")

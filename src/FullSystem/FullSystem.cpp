@@ -286,17 +286,17 @@ void FullSystem::printResult(std::string file) {
     std::vector<float> T;
     float t0 =
         (s->camToWorld.rotationMatrix()(0)) * (s->camToWorld.translation()(0)) +
-        (s->camToWorld.rotationMatrix()(3)) * (s->camToWorld.translation()(1)) +
-        (s->camToWorld.rotationMatrix()(6)) * (s->camToWorld.translation()(2));
+        (s->camToWorld.rotationMatrix()(1)) * (s->camToWorld.translation()(1)) +
+        (s->camToWorld.rotationMatrix()(2)) * (s->camToWorld.translation()(2));
     T.push_back(-1.0 * t0);
     float t1 =
-        (s->camToWorld.rotationMatrix()(1)) * (s->camToWorld.translation()(0)) +
+        (s->camToWorld.rotationMatrix()(3)) * (s->camToWorld.translation()(0)) +
         (s->camToWorld.rotationMatrix()(4)) * (s->camToWorld.translation()(1)) +
-        (s->camToWorld.rotationMatrix()(7)) * (s->camToWorld.translation()(2));
+        (s->camToWorld.rotationMatrix()(5)) * (s->camToWorld.translation()(2));
     T.push_back(-1.0 * t1);
     float t2 =
-        (s->camToWorld.rotationMatrix()(2)) * (s->camToWorld.translation()(0)) +
-        (s->camToWorld.rotationMatrix()(5)) * (s->camToWorld.translation()(1)) +
+        (s->camToWorld.rotationMatrix()(6)) * (s->camToWorld.translation()(0)) +
+        (s->camToWorld.rotationMatrix()(7)) * (s->camToWorld.translation()(1)) +
         (s->camToWorld.rotationMatrix()(8)) * (s->camToWorld.translation()(2));
     T.push_back(-1.0 * t2);
 
@@ -310,13 +310,13 @@ void FullSystem::printResult(std::string file) {
            << T[1] << " " 
            << T[2] << " " 
            << s->camToWorld.rotationMatrix()(0) << " " 
-           << s->camToWorld.rotationMatrix()(3) << " "
-           << s->camToWorld.rotationMatrix()(6) << " "
            << s->camToWorld.rotationMatrix()(1) << " "
-           << s->camToWorld.rotationMatrix()(4) << " "
-           << s->camToWorld.rotationMatrix()(7) << " "
            << s->camToWorld.rotationMatrix()(2) << " "
+           << s->camToWorld.rotationMatrix()(3) << " "
+           << s->camToWorld.rotationMatrix()(4) << " "
            << s->camToWorld.rotationMatrix()(5) << " "
+           << s->camToWorld.rotationMatrix()(6) << " "
+           << s->camToWorld.rotationMatrix()(7) << " "
            << s->camToWorld.rotationMatrix()(8) << "\n";
   }
   myfile.close();

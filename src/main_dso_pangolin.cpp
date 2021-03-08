@@ -331,7 +331,7 @@ int main(int argc, char **argv) {
 
   ImageFolderReader *reader =
       new ImageFolderReader(source, calib, gammaCalib, vignette);
-  reader->setGlobalCalibration();
+  reader->setGlobalCalibration(outputs_folder);
 
   if (setting_photometricCalibration > 0 &&
       reader->getPhotometricGamma() == 0) {

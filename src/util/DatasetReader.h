@@ -192,12 +192,23 @@ public:
 		h = undistort->getSize()[1];
 	}
 
-	void setGlobalCalibration()
+	void setGlobalCalibration(std::string outputs_folder) 
 	{
 		int w_out, h_out;
 		Eigen::Matrix3f K;
 		getCalibMono(K, w_out, h_out);
 		setGlobalCalib(w_out, h_out, K);
+
+		// Write the K matrix out to .txt file
+		std::ofstream myfile;
+		std::string outpath = outputs_folder + "/intrinsic_matrix.txt";
+		std::cout << " outpath = " << outpath << std::endl;
+		myfile.open(outpath);
+		myfile << K(0, 0) << " 0.0 " << K(0, 2) << " \n"
+				<< "0.0 " << K(1, 1) << " " << K(1, 2) << " \n"
+				<< "0.0 0.0 1.0"
+				<< "\n";
+		myfile.close();
 	}
 
 	int getNumImages()

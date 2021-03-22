@@ -34,7 +34,7 @@
 #include "util/NumType.h"
 #include "FullSystem/Residuals.h"
 #include "util/ImageAndExposure.h"
-
+#include <opencv2/opencv.hpp>
 
 namespace dso
 {
@@ -116,11 +116,12 @@ struct FrameHessian
 	//DepthImageWrap* frame;
 	FrameShell* shell;
 
+	cv::Mat rgb_image;			 // Cropped / resized RGB image
 	Eigen::Vector3f* dI;				 // trace, fine tracking. Used for direction select (not for gradient histograms etc.)
 	Eigen::Vector3f* dIp[PYR_LEVELS];	 // coarse tracking / coarse initializer. NAN in [0] only.
-	float* absSquaredGrad[PYR_LEVELS];  // only used for pixel select (histograms etc.). no NAN.
+	float* absSquaredGrad[PYR_LEVELS];   // only used for pixel select (histograms etc.). no NAN.
 
-	float* instensity;
+	float* intensity;
 
 
 

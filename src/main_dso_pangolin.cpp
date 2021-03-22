@@ -362,8 +362,9 @@ int main(int argc, char **argv) {
     fullSystem->outputWrapper.push_back(viewer);
   }
 
-  if (useSampleOutput)
+  if (useSampleOutput) {
     fullSystem->outputWrapper.push_back(new IOWrap::SampleOutputWrapper());
+  }
 
   // to make MacOS happy: run this in dedicated thread -- and use this one to
   // run the GUI.

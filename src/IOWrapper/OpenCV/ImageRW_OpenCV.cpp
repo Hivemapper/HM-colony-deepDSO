@@ -50,22 +50,20 @@ MinimalImageB* readImageBW_8U(std::string filename)
 	return img;
 }
 
-MinimalImageB3* readImageRGB_8U(std::string filename)
+cv::Mat readImageRGB_8U(std::string filename)
 {
 	cv::Mat m = cv::imread(filename, cv::IMREAD_COLOR);
 	if(m.rows*m.cols==0)
 	{
 		printf("cv::imread could not read image %s! this may segfault. \n", filename.c_str());
-		return 0;
+		exit(0);
 	}
 	if(m.type() != CV_8UC3)
 	{
 		printf("cv::imread did something strange! this may segfault. \n");
-		return 0;
+		exit(0);
 	}
-	MinimalImageB3* img = new MinimalImageB3(m.cols, m.rows);
-	memcpy(img->data, m.data, 3*m.rows*m.cols);
-	return img;
+	return m;
 }
 
 MinimalImage<unsigned short>* readImageBW_16U(std::string filename)
@@ -88,7 +86,7 @@ MinimalImage<unsigned short>* readImageBW_16U(std::string filename)
 
 MinimalImageB* readStreamBW_8U(char* data, int numBytes)
 {
-	cv::Mat m = cv::imdecode(cv::Mat(numBytes,1,CV_8U, data), cv::IMREAD_GRAYSCALE);
+	cv::Mat m = cv::imdecode(cv::Mat(numBytes,1,CV_8U, data), cv::IMREAD_GRAYSCALE); // This is where the gray scale is being read in
 	if(m.rows*m.cols==0)
 	{
 		printf("cv::imdecode could not read stream (%d bytes)! this may segfault. \n", numBytes);
@@ -104,7 +102,22 @@ MinimalImageB* readStreamBW_8U(char* data, int numBytes)
 	return img;
 }
 
-
+cv::Mat readStreamRGB_8U(char *data, int numBytes) {
+  cv::Mat m = cv::imdecode(
+      cv::Mat(numBytes, 3, CV_8U, data),
+      cv::IMREAD_COLOR); // This is where the color image is being read in
+  if (m.rows * m.cols == 0) {
+    printf(
+        "cv::imdecode could not read stream (%d bytes)! this may segfault. \n",
+        numBytes);
+    exit(0);
+  }
+  if (m.type() != CV_8U) {
+    printf("cv::imdecode did something strange! this may segfault. \n");
+    exit(0);
+  }
+  return m;
+}
 
 void writeImage(std::string filename, MinimalImageB* img)
 {

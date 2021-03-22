@@ -40,12 +40,11 @@ namespace dso
     // Destructor (interface)   
     MonoDepth::~MonoDepth() = default;
 
-    void MonoDepth::inference(cv::Mat &image, cv::Mat &depth){
-        const int height = 192;//this size is required for depth estimation module
-        const int width = 640;//please do not modify this
-        depth = MonoDepth::inference(image, height, width);
-        //MonoDepth::disp2Depth(disp, depth);
-        cout<<"got final depthmap"<<endl;
+    void MonoDepth::inference(cv::Mat &image, cv::Mat &invdepth){
+        // For PackNet01_HR_velsup_CStoK_jit.pt, height ==192 and width==640
+        const int height = image.rows;
+        const int width = image.cols;
+        invdepth = MonoDepth::inference(image, height, width); // Packnet outputs inverse-depth, not depth
     }
 
     cv::Mat MonoDepth::inference(cv::Mat &image,const int &height, const int &width)

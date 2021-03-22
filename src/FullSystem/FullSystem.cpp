@@ -69,7 +69,7 @@ FullSystem::FullSystem(const std::string &path_cnn) {
   int retstat = 0;
 
   // Make an output folder
-  std::string cmd = ("mkdir -p " + outputs_folder + "/depthmaps");
+  std::string cmd = ("mkdir -p " + outputs_folder + "/invdepthmaps");
   auto junk = system(cmd.c_str());
 
   if (setting_logStuff) {
@@ -958,8 +958,9 @@ void FullSystem::flagPointsForRemoval() {
 void FullSystem::addActiveFrame(ImageAndExposure *image, int id,
                                 std::string prefix) {
 
-  if (isLost)
+  if (isLost) {
     return;
+  }
   boost::unique_lock<boost::mutex> lock(trackMutex);
 
   // =========================== add into allFrameHistory
@@ -980,6 +981,7 @@ void FullSystem::addActiveFrame(ImageAndExposure *image, int id,
   // =========================
   fh->ab_exposure = image->exposure_time;
   fh->makeImages(image->image, &Hcalib);
+  fh->rgb_image = image->rgb_image;
 
   if (!initialized) {
     // use initializer!
@@ -1415,15 +1417,14 @@ void FullSystem::initializeFromInitializerCNN(FrameHessian *newFrame) {
            100 * keepPercentage, (int)(setting_desiredPointDensity),
            coarseInitializer->numPoints[0]);
 
-  cv::Mat depth = getDepthMap(firstFrame);
+  cv::Mat invdepth = getDepthMap(firstFrame);
 
-  // Save depthmap to file as binary
-  std::string depthfile =
-      outputs_folder + "/depthmaps/" + firstFrame->shell->file_prefix + ".bin";
-  std::cout << " depthfile = " << depthfile << std::endl;
-  SaveMatBinary(depthfile, depth);
+  // Save inverse depthmap to file as binary
+  std::string invdepthfile =
+      outputs_folder + "/invdepthmaps/" + firstFrame->shell->file_prefix + ".bin";
+  SaveMatBinary(invdepthfile, invdepth);
 
-  float *depthmap_ptr = (float *)depth.data;
+  float *invdepthmap_ptr = (float *)invdepth.data;
   for (int i = 0; i < coarseInitializer->numPoints[0]; i++) {
     if (rand() / (float)RAND_MAX > keepPercentage)
       continue;
@@ -1432,7 +1433,7 @@ void FullSystem::initializeFromInitializerCNN(FrameHessian *newFrame) {
     ImmaturePoint *pt = new ImmaturePoint(point->u + 0.5f, point->v + 0.5f,
                                           firstFrame, point->my_type, &Hcalib);
 
-    float idepth = *(depthmap_ptr + int((point->v * wG[0] + point->u + 0.5f)));
+    float idepth = *(invdepthmap_ptr + int((point->v * wG[0] + point->u + 0.5f)));
     float depth = 1.0 / idepth;
     float var = 1.0 / (6 * depth);
     pt->idepth_max = idepth;
@@ -1493,41 +1494,47 @@ void FullSystem::makeNewTraces(FrameHessian *newFrame, float *gtDepth) {
   newFrame->pointHessiansMarginalized.reserve(numPointsTotal * 1.2f);
   newFrame->pointHessiansOut.reserve(numPointsTotal * 1.2f);
 
-  cv::Mat depth = getDepthMap(newFrame);
-  std::string depthfile =
-      outputs_folder + "/depthmaps/" + newFrame->shell->file_prefix + ".bin";
-  std::cout << " depthfile = " << depthfile << std::endl;
+  cv::Mat invdepth = getDepthMap(newFrame);
+  std::string invdepthfile =
+      outputs_folder + "/invdepthmaps/" + newFrame->shell->file_prefix + ".bin";
+  std::cout << " makeNewTraces: Saving inverse depth map " << invdepthfile << std::endl;
 
-  // Save depthmap to file as binary
-  SaveMatBinary(depthfile, depth);
+  // Save inverse depthmap to file as binary
+  SaveMatBinary(invdepthfile, invdepth);
 
   for (IOWrap::Output3DWrapper *ow : outputWrapper) {
 
-    cv::Mat depth_show = depth.clone();
-    dispToDisplay(depth_show);
-    ow->pushCNNImage(depth_show);
+    cv::Mat invdepth_show = invdepth.clone();
+    dispToDisplay(invdepth_show);
+    ow->pushCNNImage(invdepth_show);
   }
 
-  float *depthmap_ptr = (float *)depth.data;
+  float *invdepthmap_ptr = (float *)invdepth.data;
 
-  for (int y = patternPadding + 1; y < hG[0] - patternPadding - 2; y++)
+  for (int y = patternPadding + 1; y < hG[0] - patternPadding - 2; y++) {
     for (int x = patternPadding + 1; x < wG[0] - patternPadding - 2; x++) {
+
       int i = x + y * wG[0];
-      if (selectionMap[i] == 0)
+      if (selectionMap[i] == 0) {
         continue;
+      }
 
       ImmaturePoint *impt =
           new ImmaturePoint(x, y, newFrame, selectionMap[i], &Hcalib);
-      impt->idepth_max = (*(depthmap_ptr + i));
-      impt->idepth_min = (*(depthmap_ptr + i));
-      if (impt->idepth_min < 0)
-        impt->idepth_min = 0;
+      impt->idepth_max = (*(invdepthmap_ptr + i));
+      impt->idepth_min = (*(invdepthmap_ptr + i));
 
-      if (!std::isfinite(impt->energyTH))
+      if (impt->idepth_min < 0) {
+        impt->idepth_min = 0;
+      }
+
+      if (!std::isfinite(impt->energyTH)) {
         delete impt;
-      else
+      } else {
         newFrame->immaturePoints.push_back(impt);
+      }
     }
+  }
   // printf("MADE %d IMMATURE POINTS!\n", (int)newFrame->immaturePoints.size());
 }
 
@@ -1582,17 +1589,11 @@ void FullSystem::printLogLine() {
 }
 
 cv::Mat FullSystem::getDepthMap(FrameHessian *fh) {
-  cv::Mat image(hG[0], wG[0], CV_8UC1);
-  unsigned char *ptr = (unsigned char *)image.ptr();
-  for (int y = 0; y < image.rows; ++y)
-    for (int x = 0; x < image.cols; ++x)
-      ptr[y * wG[0] + x] = fh->dI[y * wG[0] + x][0];
-  cv::Mat depth;
-  cv::cvtColor(image, image, cv::COLOR_GRAY2BGR);
-  depthPredictor->inference(image, depth);
-
+  cv::Mat image = fh->rgb_image;
+  cv::Mat invdepth;
+  depthPredictor->inference(image, invdepth);
   // depth = 0.3128f / (depth + 0.00001f);
-  return depth;
+  return invdepth;
 }
 
 void FullSystem::dispToDisplay(cv::Mat &disp) {

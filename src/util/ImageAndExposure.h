@@ -25,6 +25,7 @@
 #pragma once
 #include <cstring>
 #include <iostream>
+#include <opencv2/opencv.hpp>
 
 
 namespace dso
@@ -35,6 +36,7 @@ class ImageAndExposure
 {
 public:
 	EIGEN_MAKE_ALIGNED_OPERATOR_NEW;
+	cv::Mat rgb_image;
 	float* image;			// irradiance. between 0 and 256
 	int w,h;				// width and height;
 	double timestamp;

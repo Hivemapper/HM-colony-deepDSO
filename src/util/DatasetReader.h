@@ -34,6 +34,7 @@
 
 #include "util/Undistort.h"
 #include "IOWrapper/ImageRW.h"
+#include <opencv2/opencv.hpp>
 
 #if HAS_ZIPLIB
 	#include "zip.h"
@@ -204,8 +205,11 @@ public:
 		std::string outpath = outputs_folder + "/intrinsic_matrix.txt";
 		std::cout << " outpath = " << outpath << std::endl;
 		myfile.open(outpath);
-		myfile << K(0, 0) << " 0.0 " << K(0, 2) << " \n"
-				<< "0.0 " << K(1, 1) << " " << K(1, 2) << " \n"
+		// Width and height
+		myfile << h_out << " " << w_out << "\n";
+		// K Matrix
+		myfile << K(0, 0) << " 0.0 " << K(0, 2) << "\n"
+				<< "0.0 " << K(1, 1) << " " << K(1, 2) << "\n"
 				<< "0.0 0.0 1.0"
 				<< "\n";
 		myfile.close();
@@ -231,11 +235,6 @@ public:
 	}
 
 
-	MinimalImageB* getImageRaw(int id)
-	{
-			return getImageRaw_internal(id,0);
-	}
-
 	ImageAndExposure* getImage(int id, bool forceLoadDirectly=false)
 	{
 		return getImage_internal(id, 0);
@@ -259,36 +258,36 @@ public:
 private:
 
 
-	MinimalImageB* getImageRaw_internal(int id, int unused)
+	cv::Mat getImageRaw_internal(int id, int unused)
 	{
 		if(!isZipped)
 		{
 			// CHANGE FOR ZIP FILE
-			return IOWrap::readImageBW_8U(files[id]);
+			return IOWrap::readImageRGB_8U(files[id]);
 		}
 		else
 		{
 #if HAS_ZIPLIB
-			if(databuffer==0) databuffer = new char[widthOrg*heightOrg*6+10000];
+			if(databuffer==0) databuffer = new char[widthOrg*heightOrg*6+10000]; // Why 6?
 			zip_file_t* fle = zip_fopen(ziparchive, files[id].c_str(), 0);
-			long readbytes = zip_fread(fle, databuffer, (long)widthOrg*heightOrg*6+10000);
+			long readbytes = zip_fread(fle, databuffer, (long)widthOrg*heightOrg*6+10000); // Why 6?
 
-			if(readbytes > (long)widthOrg*heightOrg*6)
+			if(readbytes > (long)widthOrg*heightOrg*6) // Why 6?
 			{
-				printf("read %ld/%ld bytes for file %s. increase buffer!!\n", readbytes,(long)widthOrg*heightOrg*6+10000, files[id].c_str());
+				printf("read %ld/%ld bytes for file %s. increase buffer!!\n", readbytes,(long)widthOrg*heightOrg*6+10000, files[id].c_str()); // Why 6?
 				delete[] databuffer;
-				databuffer = new char[(long)widthOrg*heightOrg*30];
+				databuffer = new char[(long)widthOrg*heightOrg*30]; // Why 30?
 				fle = zip_fopen(ziparchive, files[id].c_str(), 0);
-				readbytes = zip_fread(fle, databuffer, (long)widthOrg*heightOrg*30+10000);
+				readbytes = zip_fread(fle, databuffer, (long)widthOrg*heightOrg*30+10000); // Why 30?
 
-				if(readbytes > (long)widthOrg*heightOrg*30)
+				if(readbytes > (long)widthOrg*heightOrg*30) // Why 30?
 				{
-					printf("buffer still to small (read %ld/%ld). abort.\n", readbytes,(long)widthOrg*heightOrg*30+10000);
+					printf("buffer still to small (read %ld/%ld). abort.\n", readbytes,(long)widthOrg*heightOrg*30+10000); // Why 30?
 					exit(1);
 				}
 			}
 
-			return IOWrap::readStreamBW_8U(databuffer, readbytes);
+			return IOWrap::readStreamRGB_8U(databuffer, readbytes);
 #else
 			printf("ERROR: cannot read .zip archive, as compile without ziplib!\n");
 			exit(1);
@@ -299,11 +298,44 @@ private:
 
 	ImageAndExposure* getImage_internal(int id, int unused)
 	{
-		MinimalImageB* minimg = getImageRaw_internal(id, 0);
+		cv::Mat rgb_image = getImageRaw_internal(id, 0);
+
+		// Calculate the irradiance (grayscale) from the RGB input
+		cv::Mat gray;
+		cv::cvtColor(rgb_image, gray, cv::COLOR_BGR2GRAY);
+		MinimalImageB* minimg = new MinimalImageB(gray.cols, gray.rows);
+		memcpy(minimg->data, gray.data, gray.rows*gray.cols);
+
+		// Standard undistort on grayscale
 		ImageAndExposure* ret2 = undistort->undistort<unsigned char>(
 				minimg,
 				(exposures.size() == 0 ? 1.0f : exposures[id]),
 				(timestamps.size() == 0 ? 0.0 : timestamps[id]));
+
+		// Undistort the color channels
+		cv::Mat red, green, blue, output;
+		extractChannel(rgb_image, red, 0);
+		cv::Mat red_undist = undistort->undistortSingleChannel(
+			(&red), (exposures.size() == 0 ? 1.0f : exposures[id]),
+			(timestamps.size() == 0 ? 0.0 : timestamps[id]));
+
+		extractChannel(rgb_image, green, 1);
+		cv::Mat green_undist = undistort->undistortSingleChannel(
+			(&green), (exposures.size() == 0 ? 1.0f : exposures[id]),
+			(timestamps.size() == 0 ? 0.0 : timestamps[id]));
+
+		extractChannel(rgb_image, blue, 2);
+		cv::Mat blue_undist = undistort->undistortSingleChannel(
+			(&blue), (exposures.size() == 0 ? 1.0f : exposures[id]),
+			(timestamps.size() == 0 ? 0.0 : timestamps[id]));
+
+		// Make undistorted RGB image and save it
+		std::vector<cv::Mat> channels;
+		channels.push_back(blue_undist);
+		channels.push_back(green_undist);
+		channels.push_back(red_undist);
+		cv::merge(channels, output);
+		(ret2->rgb_image) = output;
 		delete minimg;
 		return ret2;
 	}

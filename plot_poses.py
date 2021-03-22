@@ -4,11 +4,7 @@
 #
 #       USAGE:
 #
-#       python3  plot_poses.py --poses_file=/home/ubuntu/my_deepdso_outputs/camera_poses.txt
-#
-#       NOTE:
-#
-#       "--poses_file" path must point to the deepDSO camera_poses.txt file
+#       python3  plot_poses.py /home/ubuntu/my_deepdso_outputs/camera_poses.txt /home/ubuntu/my_deepdso_outputs/camera_poses.ply 
 #
 # camera_poses.txt is the output file produced from deepDSO. It has the format:
 #   timestamp, file_prefix, T[0], T[1], T[2], R[0], R[1], R[2], R[3], R[4], R[5], R[6], R[7], R[8]

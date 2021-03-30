@@ -1417,9 +1417,22 @@ void FullSystem::initializeFromInitializerCNN(FrameHessian *newFrame) {
            100 * keepPercentage, (int)(setting_desiredPointDensity),
            coarseInitializer->numPoints[0]);
 
-  cv::Mat invdepth = getDepthMap(firstFrame);
+  // Save the cropped input image file for use downstream in dense point cloud
+  // fusion
+  cv::Mat image = newFrame->rgb_image;
+  cv::Mat bgr_channels[3], rgb_channels[3];
+  cv::split(image, rgb_channels);
+  bgr_channels[0] = rgb_channels[2];
+  bgr_channels[1] = rgb_channels[1];
+  bgr_channels[2] = rgb_channels[0];
+  cv::Mat bgr_image;
+  cv::merge(bgr_channels, 3, bgr_image);
+  std::string imagefile =
+      outputs_folder + "/images/" + newFrame->shell->file_prefix + ".png";
+  cv::imwrite(imagefile, bgr_image);
 
   // Save inverse depthmap to file as binary
+  cv::Mat invdepth = getDepthMap(firstFrame);
   std::string invdepthfile =
       outputs_folder + "/invdepthmaps/" + firstFrame->shell->file_prefix + ".bin";
   SaveMatBinary(invdepthfile, invdepth);
@@ -1494,12 +1507,26 @@ void FullSystem::makeNewTraces(FrameHessian *newFrame, float *gtDepth) {
   newFrame->pointHessiansMarginalized.reserve(numPointsTotal * 1.2f);
   newFrame->pointHessiansOut.reserve(numPointsTotal * 1.2f);
 
+  // Save the cropped input image file for use downstream in dense point cloud
+  // fusion
+  cv::Mat image = newFrame->rgb_image;
+  cv::Mat bgr_channels[3], rgb_channels[3];
+  cv::split(image, rgb_channels);
+  bgr_channels[0] = rgb_channels[2];
+  bgr_channels[1] = rgb_channels[1];
+  bgr_channels[2] = rgb_channels[0];
+  cv::Mat bgr_image;
+  cv::merge(bgr_channels, 3, bgr_image);
+  std::string imagefile =
+      outputs_folder + "/images/" + newFrame->shell->file_prefix + ".png";
+  cv::imwrite(imagefile, bgr_image);
+
+  // Save inverse depthmap to file as binary
   cv::Mat invdepth = getDepthMap(newFrame);
   std::string invdepthfile =
       outputs_folder + "/invdepthmaps/" + newFrame->shell->file_prefix + ".bin";
-  std::cout << " makeNewTraces: Saving inverse depth map " << invdepthfile << std::endl;
-
-  // Save inverse depthmap to file as binary
+  std::cout << " makeNewTraces: Saving inverse depth map " << invdepthfile
+            << std::endl;
   SaveMatBinary(invdepthfile, invdepth);
 
   for (IOWrap::Output3DWrapper *ow : outputWrapper) {

@@ -73,12 +73,15 @@ namespace dso
         batch.push_back(tensor_image);
         //! get the result
         auto result = model.forward(batch);
-        torch::Tensor disp_tensor = result.toTensor();
+        torch::Tensor disp_tensor = result.toTensor().squeeze();
        
-        disp_tensor = disp_tensor.permute({0, 2, 3, 1});
+        // disp_tensor = disp_tensor.permute({0, 2, 3, 1});
         disp_tensor = disp_tensor.to(at::kCPU);
 
-        cv::Mat disp = cv::Mat(height, width, CV_32FC1, disp_tensor.data_ptr());
+        // cv::Mat disp = cv::Mat(height, width, CV_32FC1, disp_tensor.data_ptr());
+        cv::Mat disp = cv::Mat::eye(height, width, CV_32FC1);
+        std::memcpy((void *) disp.data, disp_tensor.data_ptr(), sizeof(float)*disp_tensor.numel());
+
         
         // //linear transform
         // double minVal;

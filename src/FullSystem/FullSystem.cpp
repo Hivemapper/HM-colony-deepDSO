@@ -68,9 +68,12 @@ FullSystem::FullSystem(const std::string &path_cnn) {
 
   int retstat = 0;
 
-  // Make an output folder
-  std::string cmd = ("mkdir -p " + outputs_folder + "/invdepthmaps");
+  // Make output subfolders
+  std::string cmd;
+  cmd = ("mkdir -p " + outputs_folder + "/invdepthmaps");
   auto junk = system(cmd.c_str());
+  cmd = ("mkdir -p " + outputs_folder + "/images");
+  junk = system(cmd.c_str());
 
   if (setting_logStuff) {
 

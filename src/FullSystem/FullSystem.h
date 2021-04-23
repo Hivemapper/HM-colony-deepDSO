@@ -146,6 +146,10 @@ public:
 	float optimize(int mnumOptIts);
 
 	void printResult(std::string file);
+	void printPC(std::string file);
+
+  void savePoints(FrameHessian* frame);
+  // int total_saved_points = 0;
 
 	void debugPlot(std::string name);
 
@@ -169,6 +173,8 @@ public:
 private:
 
 	CalibHessian Hcalib;
+
+  std::vector<Vec3d> point_cloud;
 
 
 

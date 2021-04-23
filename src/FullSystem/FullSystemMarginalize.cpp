@@ -50,6 +50,9 @@
 
 #include "FullSystem/CoarseTracker.h"
 
+#include <opencv2/core/core.hpp>
+#include "IOWrapper/OpenCV/BinaryCvMat.h"
+
 namespace dso
 {
 
@@ -155,6 +158,10 @@ void FullSystem::marginalizeFrame(FrameHessian* frame)
 
 	assert((int)frame->pointHessians.size()==0);
 
+	// if (frame->shell->marginalizedAt != frameHessians.back()->shell->id)
+  // {
+  //   savePoints(frame);
+  // }
 
 	ef->marginalizeFrame(frame->efFrame);
 
@@ -215,6 +222,107 @@ void FullSystem::marginalizeFrame(FrameHessian* frame)
 }
 
 
+void FullSystem::savePoints(FrameHessian* frame)
+{
+  cv::Mat idepthmap = cv::Mat::zeros(frame->rgb_image.size(), CV_32FC1);
+	float fx = Hcalib.fxl();
+	float fy = Hcalib.fyl();
+	float fxi = 1.0/fx;
+	float fyi = 1.0/fy;
+	float cx = Hcalib.cxl();
+	float cy = Hcalib.cyl();
+	float cxi = -cx / fx;
+	float cyi = -cy / fy;
 
+  SE3 camToWorld = frame->shell->camToWorld;
+
+  // defaults
+  // settings_scaledVarTH("ui.relVarTH",0.001,1e-10,1e10, true);
+	// settings_absVarTH("ui.absVarTH",0.001,1e-10,1e10, true);
+	// settings_minRelBS("ui.minRelativeBS",0.1,0,1, false);
+
+  unsigned int total_points = 0;
+ 
+  for(PointHessian* p : frame->pointHessians)
+	{
+    int x = static_cast<int>(p->u + 0.5);
+    int y = static_cast<int>(p->v + 0.5);
+
+    float u = p->u;
+    float v = p->v;
+
+    float depth = 1.0/p->idepth_scaled;
+    float depth4 = depth*depth; depth4*= depth4;
+		float var = (1.0f / (p->idepth_hessian+0.01));
+
+		if(var * depth4 > 0.001)
+			continue;
+
+		if(var > 0.001)
+			continue;
+
+		if(p->maxRelBaseline < 0.1)
+			continue;
+
+		for(int pnt=0;pnt<patternNum;pnt++)
+		{
+			int dx = patternP[pnt][0];
+			int dy = patternP[pnt][1];
+
+      // idepthmap.at<float>(y+dy, x+dx) = 255;
+      idepthmap.at<float>(y+dy, x+dx) = p->idepth_scaled;
+
+      point_cloud.emplace_back(camToWorld * Vec3d(((u+dx) * fxi + cxi) * depth,
+                                                  ((v+dy) * fyi + cyi) * depth,
+                                                  depth));
+      ++total_points;
+    }
+	}
+
+	for(PointHessian* p : frame->pointHessiansMarginalized)
+	{
+    int x = static_cast<int>(p->u + 0.5);
+    int y = static_cast<int>(p->v + 0.5);
+
+    float u = p->u;
+    float v = p->v;
+
+    float depth = 1.0/p->idepth_scaled;
+    float depth4 = depth*depth; depth4*= depth4;
+		float var = (1.0f / (p->idepth_hessian+0.01));
+
+		if(var * depth4 > 0.001)
+			continue;
+
+		if(var > 0.001)
+			continue;
+
+		if(p->maxRelBaseline < 0.1)
+			continue;
+
+		for(int pnt=0;pnt<patternNum;pnt++)
+		{
+			int dx = patternP[pnt][0];
+			int dy = patternP[pnt][1];
+
+      // idepthmap.at<float>(y+dy, x+dx) = 255;
+      idepthmap.at<float>(y+dy, x+dx) = p->idepth_scaled;
+
+      point_cloud.emplace_back(camToWorld * Vec3d(((u+dx) * fxi + cxi) * depth,
+                                                  ((v+dy) * fyi + cyi) * depth,
+                                                  depth));
+      ++total_points;
+    }
+	}
+
+
+  std::string invdepthfile =
+      outputs_folder + "/invdepthmaps/" + frame->shell->file_prefix + "_sparse.bin";
+  std::cout << "Marginalizing and saving inv depthmap " << invdepthfile <<"\n";
+  // std::cout << "Original size " << (frame->pointHessians.size() + frame->pointHessiansMarginalized.size()) * 8 << "\n";
+  std::cout << "Filtered size " << total_points << "\n";
+  // std::cout << "Immature points: " << frame->immaturePoints.size() << "  Outlier points: " << frame->pointHessiansOut.size() << "\n";
+  SaveMatBinary(invdepthfile, idepthmap);
+}
 
 }

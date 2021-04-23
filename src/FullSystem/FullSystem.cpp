@@ -244,6 +244,10 @@ void FullSystem::printResult(std::string file) {
   boost::unique_lock<boost::mutex> lock(trackMutex);
   boost::unique_lock<boost::mutex> crlock(shellPoseMutex);
 
+  std::cout << "All frame history size: " << allFrameHistory.size() << "\n";
+  std::cout << "All keyframe history size: " << allKeyFramesHistory.size() << "\n";
+  std::cout << "frame hessians: " << frameHessians.size() << "\n";
+
   std::ofstream myfile;
   myfile.open(file.c_str());
   myfile << std::setprecision(15);
@@ -266,15 +270,15 @@ void FullSystem::printResult(std::string file) {
 
   for (FrameShell *s : allFrameHistory) {
     if (!s->poseValid) {
-      std::cout << "Frame_prefix " << s->file_prefix
-                << " has an invalid pose and won't be logged: " << std::endl;
+      // std::cout << "Frame_prefix " << s->file_prefix
+      //           << " has an invalid pose and won't be logged: " << std::endl;
       continue;
     }
 
     if (setting_onlyLogKFPoses && s->marginalizedAt == s->id) {
-      std::cout << "Frame_prefix " << s->file_prefix
-                << " is considered MARGINALIZED and won't be logged: "
-                << std::endl;
+      // std::cout << "Frame_prefix " << s->file_prefix
+      //           << " is considered MARGINALIZED and won't be logged: "
+      //           << std::endl;
       continue;
     }
 
@@ -319,6 +323,34 @@ void FullSystem::printResult(std::string file) {
            << s->camToWorld.rotationMatrix()(7) << " "
            << s->camToWorld.rotationMatrix()(8) << "\n";
   }
+  myfile.close();
+}
+
+void FullSystem::printPC(std::string file) {
+  boost::unique_lock<boost::mutex> lock(trackMutex);
+  boost::unique_lock<boost::mutex> crlock(shellPoseMutex);
+
+  std::cout << "Total saved points: " << point_cloud.size() << "\n";
+
+  std::ofstream myfile;
+  myfile.open(file.c_str());
+  myfile << std::setprecision(15);
+
+  myfile << "ply\n"
+         << "format ascii 1.0\n"
+         << "element vertex " << point_cloud.size() << "\n"
+         << "property float x\n"
+         << "property float y\n"
+         << "property float z\n"
+         << "end_header\n";
+
+  for (Vec3d point : point_cloud)
+  {
+    myfile << point[0] << " "
+           << point[1] << " "
+           << point[2] << "\n";
+  }
+
   myfile.close();
 }
 
@@ -1433,9 +1465,9 @@ void FullSystem::initializeFromInitializerCNN(FrameHessian *newFrame) {
 
   // Save inverse depthmap to file as binary
   cv::Mat invdepth = getDepthMap(firstFrame);
-  std::string invdepthfile =
-      outputs_folder + "/invdepthmaps/" + firstFrame->shell->file_prefix + ".bin";
-  SaveMatBinary(invdepthfile, invdepth);
+  // std::string invdepthfile =
+  //     outputs_folder + "/invdepthmaps/" + firstFrame->shell->file_prefix + ".bin";
+  // SaveMatBinary(invdepthfile, invdepth);
 
   float *invdepthmap_ptr = (float *)invdepth.data;
   for (int i = 0; i < coarseInitializer->numPoints[0]; i++) {
@@ -1523,11 +1555,11 @@ void FullSystem::makeNewTraces(FrameHessian *newFrame, float *gtDepth) {
 
   // Save inverse depthmap to file as binary
   cv::Mat invdepth = getDepthMap(newFrame);
-  std::string invdepthfile =
-      outputs_folder + "/invdepthmaps/" + newFrame->shell->file_prefix + ".bin";
-  std::cout << " makeNewTraces: Saving inverse depth map " << invdepthfile
-            << std::endl;
-  SaveMatBinary(invdepthfile, invdepth);
+  // std::string invdepthfile =
+  //     outputs_folder + "/invdepthmaps/" + newFrame->shell->file_prefix + ".bin";
+  // std::cout << " makeNewTraces: Saving inverse depth map " << invdepthfile
+  //           << std::endl;
+  // SaveMatBinary(invdepthfile, invdepth);
 
   for (IOWrap::Output3DWrapper *ow : outputWrapper) {
 

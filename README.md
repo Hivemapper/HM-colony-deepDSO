@@ -36,4 +36,4 @@ TensorRT is one the applicable inference framework which reduces the consumed in
 ## Building
 - See `./docker/` for instructions on how to either build your own docker image from scratch, or use an existing docker image from DockerHub. The `./docker/Dockerfile` is also useful starting point for creating a build on a Debian system.
 
-- Go to [monodepth2.cpp](https://github.com/TengFeiHan0/monodepth2.cpp) and download the required torchscript model(`packnet.pt`). This is needed at runtime to test the example trained network.
+- You'll need a torchscript DNN model for inference inside deepDSO. You can go to [monodepth2.cpp](https://github.com/TengFeiHan0/monodepth2.cpp) and download the required torchscript model(`packnet.pt`). You can also find `.ckpt` files for pre-trained DNN models [here](https://github.com/TRI-ML/packnet-sfm#models) that can be converted to `.pt` files using the `convert_model_to_jit.py` script.

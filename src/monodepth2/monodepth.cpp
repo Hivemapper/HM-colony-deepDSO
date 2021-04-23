@@ -42,6 +42,7 @@ namespace dso
 
     void MonoDepth::inference(cv::Mat &image, cv::Mat &invdepth){
         // For PackNet01_HR_velsup_CStoK_jit.pt, height ==192 and width==640
+        // Maybe 384, 1280 actually?
         const int height = image.rows;
         const int width = image.cols;
         invdepth = MonoDepth::inference(image, height, width); // Packnet outputs inverse-depth, not depth
@@ -53,6 +54,7 @@ namespace dso
         assert(!image.empty());
         cv::Mat input_mat;
         cv::resize(image, input_mat, cv::Size(width, height));
+        // cv::resize(image, input_mat, cv::Size(1280, 384));
         //[0, 255]
         input_mat.convertTo(input_mat,CV_32FC1, 1./255.);
         //[0, 1]
@@ -74,13 +76,17 @@ namespace dso
         //! get the result
         auto result = model.forward(batch);
         torch::Tensor disp_tensor = result.toTensor().squeeze();
+        // std::cout << "inference size: " << disp_tensor.sizes() << "\n";
        
         // disp_tensor = disp_tensor.permute({0, 2, 3, 1});
         disp_tensor = disp_tensor.to(at::kCPU);
 
         // cv::Mat disp = cv::Mat(height, width, CV_32FC1, disp_tensor.data_ptr());
         cv::Mat disp = cv::Mat::eye(height, width, CV_32FC1);
+        // cv::Mat disp = cv::Mat::eye(384, 1280, CV_32FC1);
         std::memcpy((void *) disp.data, disp_tensor.data_ptr(), sizeof(float)*disp_tensor.numel());
+        // cv::Mat out;
+        // cv::resize(disp, out, cv::Size(width, height));
 
         
         // //linear transform
@@ -95,6 +101,7 @@ namespace dso
         // cv::cvtColor(disp, disp, cv::COLOR_GRAY2BGR);
         
         return disp;
+        // return out;
     }
 
     void MonoDepth::disp2Depth(cv::Mat &dispMap, cv::Mat &depthMap)

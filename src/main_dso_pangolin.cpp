@@ -222,7 +222,7 @@ void parseArgument(char *arg) {
   }
   if (1 == sscanf(arg, "end=%d", &option)) {
     end_img = option;
-    printf("END AT %d!\n", start);
+    printf("END AT %d!\n", end_img);
     return;
   }
 
@@ -341,7 +341,7 @@ int main(int argc, char **argv) {
   }
 
   int lstart = start;
-  int lend = 100000;
+  int lend = end_img;
   int linc = 1;
   if (reverse_image == true) {
     printf("REVERSE!!!!");
@@ -474,6 +474,8 @@ int main(int argc, char **argv) {
     gettimeofday(&tv_end, NULL);
 
     fullSystem->printResult(outputs_folder + "/camera_poses.txt");
+    // Save pointcloud 
+    fullSystem->printPC(outputs_folder + "/dso_pointcloud.ply");
 
     int numFramesProcessed = abs(idsToPlay[0] - idsToPlay.back());
     double numSecondsProcessed = fabs(reader->getTimestamp(idsToPlay[0]) -

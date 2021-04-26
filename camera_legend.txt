@@ -1,0 +1,4 @@
+Pinhole fx fy cx cy 0
+in_width in_height
+"crop" / "full" / "none" / "fx fy cx cy 0"
+out_width out_height

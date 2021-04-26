@@ -474,7 +474,8 @@ int main(int argc, char **argv) {
     gettimeofday(&tv_end, NULL);
 
     fullSystem->printResult(outputs_folder + "/camera_poses.txt");
-    // fullSystem->printPC(outputs_folder + "/dso_pointcloud.ply");
+    // Save pointcloud 
+    fullSystem->printPC(outputs_folder + "/dso_pointcloud.ply");
 
     int numFramesProcessed = abs(idsToPlay[0] - idsToPlay.back());
     double numSecondsProcessed = fabs(reader->getTimestamp(idsToPlay[0]) -

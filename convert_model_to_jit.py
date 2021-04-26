@@ -86,7 +86,6 @@ def convert(model_wrapper, input_file, output_file, image_shape, half):
         pass
 
     traced_script_module = torch.jit.trace(model_wrapper.depth_net, image, check_trace= False)#convert
-    # traced_script_module = torch.jit.trace_module(model_wrapper.depth_net, {'trace_forward': image}, check_trace= False)#convert
     # save torchscript model
     traced_script_module.save(output_file)
 
@@ -124,7 +123,6 @@ def main(args):
     model_wrapper.eval()
 
     # Process each file
-    # for fn in files[rank()::world_size()]:
     convert(model_wrapper, args.input, args.output, image_shape, args.half)
 
 if __name__ == '__main__':

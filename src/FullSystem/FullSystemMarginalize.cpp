@@ -158,10 +158,11 @@ void FullSystem::marginalizeFrame(FrameHessian* frame)
 
 	assert((int)frame->pointHessians.size()==0);
 
-	// if (frame->shell->marginalizedAt != frameHessians.back()->shell->id)
-  // {
-  //   savePoints(frame);
-  // }
+  // Save depthmaps and build point cloud.
+	if (frame->shell->marginalizedAt != frameHessians.back()->shell->id)
+  {
+    savePoints(frame);
+  }
 
 	ef->marginalizeFrame(frame->efFrame);
 
@@ -225,6 +226,10 @@ void FullSystem::marginalizeFrame(FrameHessian* frame)
 void FullSystem::savePoints(FrameHessian* frame)
 {
   cv::Mat idepthmap = cv::Mat::zeros(frame->rgb_image.size(), CV_32FC1);
+
+  // Copied approach from the GUI code
+  // Not sure why they implemented it this way, but this works out to be a standard
+  // inverse projection (ie 2D -> 3D).
 	float fx = Hcalib.fxl();
 	float fy = Hcalib.fyl();
 	float fxi = 1.0/fx;
@@ -269,7 +274,6 @@ void FullSystem::savePoints(FrameHessian* frame)
 			int dx = patternP[pnt][0];
 			int dy = patternP[pnt][1];
 
-      // idepthmap.at<float>(y+dy, x+dx) = 255;
       idepthmap.at<float>(y+dy, x+dx) = p->idepth_scaled;
 
       point_cloud.emplace_back(camToWorld * Vec3d(((u+dx) * fxi + cxi) * depth,
@@ -305,7 +309,6 @@ void FullSystem::savePoints(FrameHessian* frame)
 			int dx = patternP[pnt][0];
 			int dy = patternP[pnt][1];
 
-      // idepthmap.at<float>(y+dy, x+dx) = 255;
       idepthmap.at<float>(y+dy, x+dx) = p->idepth_scaled;
 
       point_cloud.emplace_back(camToWorld * Vec3d(((u+dx) * fxi + cxi) * depth,
@@ -318,9 +321,10 @@ void FullSystem::savePoints(FrameHessian* frame)
 
   std::string invdepthfile =
       outputs_folder + "/invdepthmaps/" + frame->shell->file_prefix + "_sparse.bin";
-  std::cout << "Marginalizing and saving inv depthmap " << invdepthfile <<"\n";
+  // Just some debugging/informational printouts
+  // std::cout << "Marginalizing and saving inv depthmap " << invdepthfile <<"\n";
   // std::cout << "Original size " << (frame->pointHessians.size() + frame->pointHessiansMarginalized.size()) * 8 << "\n";
-  std::cout << "Filtered size " << total_points << "\n";
+  // std::cout << "Filtered size " << total_points << "\n";
   // std::cout << "Immature points: " << frame->immaturePoints.size() << "  Outlier points: " << frame->pointHessiansOut.size() << "\n";
   SaveMatBinary(invdepthfile, idepthmap);
 }

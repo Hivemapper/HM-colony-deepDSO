@@ -41,8 +41,11 @@ namespace dso
     MonoDepth::~MonoDepth() = default;
 
     void MonoDepth::inference(cv::Mat &image, cv::Mat &invdepth){
-        // For PackNet01_HR_velsup_CStoK_jit.pt, height ==192 and width==640
-        // Maybe 384, 1280 actually?
+        // For PackNet01_HR_velsup_CStoK_jit.pt, height==384 and width==1280
+        // We were able to also run this successfully with 192x640. Probably worth a quick investigation
+        // to figure out what's going on there.
+        // This code may need to be adjusted if, for some reason, images fed into DSO are not the same
+        // size as the images the net was trained on.
         const int height = image.rows;
         const int width = image.cols;
         invdepth = MonoDepth::inference(image, height, width); // Packnet outputs inverse-depth, not depth
@@ -54,10 +57,13 @@ namespace dso
         assert(!image.empty());
         cv::Mat input_mat;
         cv::resize(image, input_mat, cv::Size(width, height));
-        // cv::resize(image, input_mat, cv::Size(1280, 384));
+
+        // All tests of DSO ran with this, but on closer inspection I'm not sure it's needed and may even be negatively impacting results
+        // Should be tested side by side, both with and without this conversion
         //[0, 255]
         input_mat.convertTo(input_mat,CV_32FC1, 1./255.);
         //[0, 1]
+
         //!transform a cv::Mat into a tensor   [B, H, W, C]
         torch::Tensor tensor_image = torch::from_blob(input_mat.data, {1,input_mat.rows, input_mat.cols,3}, torch::kF32);
         tensor_image = tensor_image.permute({0,3,1,2});//[B, C, H, W]
@@ -78,17 +84,15 @@ namespace dso
         torch::Tensor disp_tensor = result.toTensor().squeeze();
         // std::cout << "inference size: " << disp_tensor.sizes() << "\n";
        
-        // disp_tensor = disp_tensor.permute({0, 2, 3, 1});
         disp_tensor = disp_tensor.to(at::kCPU);
 
-        // cv::Mat disp = cv::Mat(height, width, CV_32FC1, disp_tensor.data_ptr());
         cv::Mat disp = cv::Mat::eye(height, width, CV_32FC1);
-        // cv::Mat disp = cv::Mat::eye(384, 1280, CV_32FC1);
         std::memcpy((void *) disp.data, disp_tensor.data_ptr(), sizeof(float)*disp_tensor.numel());
-        // cv::Mat out;
-        // cv::resize(disp, out, cv::Size(width, height));
 
         
+        // This was left behind from the guy we forked this from.
+        // Might be worth investigating to confirm whether this is needed or not.
+        // All tests were done with this commented out.
         // //linear transform
         // double minVal;
         // double maxVal;
@@ -101,7 +105,6 @@ namespace dso
         // cv::cvtColor(disp, disp, cv::COLOR_GRAY2BGR);
         
         return disp;
-        // return out;
     }
 
     void MonoDepth::disp2Depth(cv::Mat &dispMap, cv::Mat &depthMap)
